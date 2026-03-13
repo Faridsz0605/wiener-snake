@@ -1,0 +1,22 @@
+[tools]
+python = "3.12"
+uv = "latest"
+
+[settings]
+python.uv_venv_auto = "create|source"   # mise activa el .venv de uv automaticamente
+
+[tasks.install]
+description = "Sync deps via uv"
+run = "uv sync"
+
+[tasks.train]
+description = "Train the Snake AI agent"
+run = "uv run python agent.py"
+
+[tasks.run]
+description = "Play Snake with the trained model"
+run = "uv run python snake.py"
+
+[tasks.format]
+description = "Format code with ruff"
+run = "uv run ruff format ."

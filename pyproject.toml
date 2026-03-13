@@ -1,0 +1,20 @@
+[project]
+name = "self"
+version = "0.1.0"
+description = "Snake AI powered by reinforcement learning with PyTorch"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "torch>=2.2.0",
+    "numpy>=1.26.0",
+    "matplotlib>=3.8.0",
+    "pygame>=2.5.0",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
