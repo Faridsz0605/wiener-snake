@@ -1,0 +1,78 @@
+{
+  // Python environment — mise + uv venv integration
+  // Zed will pick up .venv/bin/python created by `uv sync`
+  // mise manages the Python runtime at:
+  //   ~/.local/share/mise/installs/python/3.12.12/bin/python
+  "languages": {
+    "Python": {
+      // Point directly at the uv-managed venv in this project root.
+      // uv always creates .venv/ relative to pyproject.toml — so this is stable.
+      "language_servers": ["pyright", "ruff"],
+
+      // Tell the formatter to use ruff (declared in mise.toml tasks.format)
+      "formatter": {
+        "language_server": {
+          "name": "ruff"
+        }
+      },
+      "format_on_save": "on"
+    }
+  },
+
+  "lsp": {
+    // Pyright — type checking + import resolution
+    "pyright": {
+      "settings": {
+        "python": {
+          // Relative path to the uv venv — works for any contributor
+          // as long as they run `uv sync` (or `mise run install`) first
+          "pythonPath": ".venv/bin/python",
+
+          // venvPath + venv together = pyright finds .venv automatically
+          "venvPath": ".",
+          "venv": ".venv",
+
+          "analysis": {
+            // Resolve imports from .venv/lib/python3.12/site-packages
+            "extraPaths": [".venv/lib/python3.12/site-packages"],
+
+            // Strict enough to catch real errors, not annoying
+            "typeCheckingMode": "basic",
+            "autoSearchPaths": true,
+            "useLibraryCodeForTypes": true,
+
+            // mise installs python here — fallback if venv lookup fails
+            "pythonInterpreterPath": "/home/faris/.local/share/mise/installs/python/3.12.12/bin/python"
+          }
+        }
+      }
+    },
+
+    // Ruff — linting + formatting (replaces flake8/black/isort)
+    // Picks up config from pyproject.toml automatically if present
+    "ruff": {
+      "initialization_options": {
+        "settings": {
+          // Look for ruff config in pyproject.toml at project root
+          "configurationPreference": "filesystemFirst",
+          "lineLength": 88,
+          "lint": {
+            "enable": true
+          },
+          "format": {
+            "enable": true
+          }
+        }
+      }
+    }
+  },
+
+  // Terminal — activate the uv venv automatically when opening
+  // a terminal inside Zed for this project
+  "terminal": {
+    "env": {
+      "VIRTUAL_ENV": ".venv",
+      "PATH": ".venv/bin:/home/faris/.local/share/mise/installs/uv/0.10.9/uv-x86_64-unknown-linux-musl:.venv/bin:/home/faris/.local/bin:$PATH"
+    }
+  }
+}

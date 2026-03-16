@@ -6,8 +6,11 @@ import numpy as np
 import pygame
 
 pygame.init()
-font = pygame.font.Font("arial.ttf", 25)
-# font = pygame.font.SysFont('arial', 25)
+# try for font if not loaded/installed
+try:
+    font = pygame.font.Font("arial.ttf", 25)
+except FileNotFoundError:
+    font = pygame.font.SysFont("arial", 25)
 
 
 class Direction(Enum):

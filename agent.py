@@ -6,7 +6,10 @@ from collections import deque
 import numpy as np
 import torch
 
-# from neurons import Linear_QNet, QTrainer
+# from torch._C import dtype
+from adition import plot
+from neurons import Linear_Q, Trainer
+
 # from aditions import plot
 from snake import Direction, Point, SnakeGameAI
 
@@ -19,12 +22,10 @@ class Agent:
     def __init__(self) -> None:
         self.n_games = 0  # <- var to control games played
         self.epsilon = 0  # <- parameter to control randomness
-        self.gamm = 0  # discount factor (castigo)
-        self.memory = deque(max, len=MAX_MEM)  # <- memory for agent
-        self.model = None
-        self.trainer = None
-
-        # TO DO: trainer model
+        self.gamma = 0  # discount factor (castigo)
+        self.memory = deque(maxlen=MAX_MEM)  # <- memory for agent
+        self.model = Linear_Q(11, 256, 3)
+        self.trainer = Trainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, snake):
         head = snake.snake[0]
@@ -68,7 +69,7 @@ class Agent:
 
         return np.array(state, dtype=int)
 
-    def remeber(self, state, action, reward, next_state, done):
+    def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
         pass
 
@@ -80,15 +81,25 @@ class Agent:
             mini_sample = self.memory
         # faster way with pytorch
         states, actions, rewards, next_states, dones = zip(*mini_sample)
-        self.trainer.train_step(states, actions, rewards, next_states, dones)
+        self.trainer.train(states, actions, rewards, next_states, dones)
 
     def short_mem(self, state, action, reward, next_state, done):
         """func for training (long_term_mem)"""
-        self.trainer.train_step(state, action, reward, next_state, done)
+        self.trainer.train(state, action, reward, next_state, done)
 
-    def get_action(self):
+    def get_action(self, state):
         # def random moves : exploration/exploitation
-        pass
+        self.epsilon = 80 - self.n_games
+        final_move = [0, 0, 0]
+        if random.randint(0, 200) < self.epsilon:
+            move = random.randint(0, 2)
+            final_move[move] = 1
+        else:
+            state0 = torch.tensor(state, dtype=torch.float)
+            prediction = self.model(state0)
+            move = torch.argmax(prediction).item()
+            final_move[move] = 1
+        return final_move
 
 
 def train():
@@ -123,7 +134,13 @@ def train():
         print(
             f"N of games played:{agent.n_games}, score is :{score}, record is: {record}"
         )
-        # TO DO: plot
+
+        plot_score.append(score)
+        tot_score += score
+        # fixed 0 division on first step
+        mean = tot_score / agent.n_games if agent.n_games > 0 else 0
+        plot_mean_score.append(mean)
+        plot(plot_score, plot_mean_score)
 
 
 if __name__ == "__main__":
