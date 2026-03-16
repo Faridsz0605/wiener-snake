@@ -22,7 +22,7 @@ class Agent:
     def __init__(self) -> None:
         self.n_games = 0  # <- var to control games played
         self.epsilon = 0  # <- parameter to control randomness
-        self.gamma = 0  # discount factor (castigo)
+        self.gamma = 0.9  # discount factor (castigo)
         self.memory = deque(maxlen=MAX_MEM)  # <- memory for agent
         self.model = Linear_Q(11, 256, 3)
         self.trainer = Trainer(self.model, lr=LR, gamma=self.gamma)
@@ -89,7 +89,7 @@ class Agent:
 
     def get_action(self, state):
         # def random moves : exploration/exploitation
-        self.epsilon = 80 - self.n_games
+        self.epsilon = max(200 - self.n_games, 10)  # <- randomness never stops
         final_move = [0, 0, 0]
         if random.randint(0, 200) < self.epsilon:
             move = random.randint(0, 2)
@@ -130,7 +130,7 @@ def train():
 
             if score > record:
                 record = score
-                # agent.neurons.save()
+                agent.model.save()
         print(
             f"N of games played:{agent.n_games}, score is :{score}, record is: {record}"
         )
