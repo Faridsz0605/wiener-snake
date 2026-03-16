@@ -1,0 +1,6 @@
+# pycache
+__pycache__/
+#zed IDE
+.zed
+# ruff
+.ruff_cache/
