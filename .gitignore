@@ -1,6 +1,6 @@
 # pycache
-__pycache__/*
+__pycache__/
 #zed IDE
-.zed
+.zed/
 # ruff
-.ruff_cache/*
+.ruff_cache/
