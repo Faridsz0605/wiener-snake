@@ -23,7 +23,7 @@ class Linear_Q(nn.Module):
 
     def save(self, file_name="model.pth"):
         """helper func to save model"""
-        mod_folder = "./models"
+        mod_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
         if not os.path.exists(mod_folder):
             os.makedirs(mod_folder)
 
@@ -57,21 +57,22 @@ class Trainer:
         # 1: predicted Q values with current state
         pred = self.model(state)
 
+        # 2: Q_new = r + y * max(next_predicted Q value) -> only if not done
+        # vectorized: single forward pass for ALL next_states at once
         target = pred.clone()
+        with torch.no_grad():
+            next_pred = self.model(next_state)
+            next_max = torch.max(next_pred, dim=1)[0]
+
         for idx in range(len(done)):
             Q_new = reward[idx]
             if not done[idx]:
-                Q_new = reward[idx] + self.gamma * torch.max(
-                    self.model(next_state[idx])
-                )
+                Q_new = reward[idx] + self.gamma * next_max[idx]
 
             target[idx][torch.argmax(action[idx]).item()] = Q_new
 
-        # 2: Q_new = r + y * max(next_predicted Q value) -> only do this if not done
-        # pred.clone()
-        # preds[argmax(action)] = Q_new
         self.optimizer.zero_grad()
-        loss = self.criterion(target, pred)
+        loss = self.criterion(pred, target)
         loss.backward()
 
         self.optimizer.step()
