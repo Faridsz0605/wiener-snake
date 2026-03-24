@@ -6,11 +6,8 @@ from collections import deque
 import numpy as np
 import torch
 
-# from torch._C import dtype
 from adition import plot
 from neurons import Linear_Q, Trainer
-
-# from aditions import plot
 from snake import Direction, Point, SnakeGameAI
 
 MAX_MEM = 100_000
@@ -22,7 +19,7 @@ class Agent:
     def __init__(self) -> None:
         self.n_games = 0  # <- var to control games played
         self.epsilon = 0  # <- parameter to control randomness
-        self.gamma = 0.9  # discount factor (castigo)
+        self.gamma = 0.95  # discount factor (castigo)
         self.memory = deque(maxlen=MAX_MEM)  # <- memory for agent
         self.model = Linear_Q(11, 256, 3)
         self.trainer = Trainer(self.model, lr=LR, gamma=self.gamma)
@@ -71,7 +68,6 @@ class Agent:
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
-        pass
 
     def long_mem(self):
         """func for training (long_term_mem)"""
@@ -84,14 +80,15 @@ class Agent:
         self.trainer.train(states, actions, rewards, next_states, dones)
 
     def short_mem(self, state, action, reward, next_state, done):
-        """func for training (long_term_mem)"""
+        """func for training (short_term_mem)"""
         self.trainer.train(state, action, reward, next_state, done)
 
     def get_action(self, state):
-        # def random moves : exploration/exploitation
-        self.epsilon = max(200 - self.n_games, 10)  # <- randomness never stops
+        # exploration/exploitation with exponential decay
+        # starts at ~1.0, decays toward 0.01 over ~500 games
+        self.epsilon = max(0.01, 1.0 - self.n_games / 500)
         final_move = [0, 0, 0]
-        if random.randint(0, 200) < self.epsilon:
+        if random.random() < self.epsilon:
             move = random.randint(0, 2)
             final_move[move] = 1
         else:
@@ -123,7 +120,7 @@ def train():
         # remember
         agent.remember(state_old, final_move, reward, state_new, done)
         if done:
-            # defing long mem (memories)
+            # training long mem (replay memories)
             snake.reset()
             agent.n_games += 1
             agent.long_mem()
@@ -131,16 +128,16 @@ def train():
             if score > record:
                 record = score
                 agent.model.save()
-        print(
-            f"N of games played:{agent.n_games}, score is :{score}, record is: {record}"
-        )
 
-        plot_score.append(score)
-        tot_score += score
-        # fixed 0 division on first step
-        mean = tot_score / agent.n_games if agent.n_games > 0 else 0
-        plot_mean_score.append(mean)
-        plot(plot_score, plot_mean_score)
+            print(
+                f"Game: {agent.n_games} | Score: {score} | Record: {record} | Epsilon: {agent.epsilon:.3f}"
+            )
+
+            plot_score.append(score)
+            tot_score += score
+            mean = tot_score / agent.n_games
+            plot_mean_score.append(mean)
+            plot(plot_score, plot_mean_score)
 
 
 if __name__ == "__main__":

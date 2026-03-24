@@ -15,6 +15,9 @@ An educational reinforcement learning project by [wiener-studios], originally bo
 
 ## About
 
+> [!Note]
+> This project is 100% human made on the neuronal network and does not intend to be full of AI slop. Claude was *Only* used for improving UI of the snake and quick fixes.
+
 Snake AI trained via reinforcement learning using PyTorch. Built with `pygame` for rendering and designed to run on **CPU-only** machines — no GPU required.
 
 ---

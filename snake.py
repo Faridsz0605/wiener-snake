@@ -86,7 +86,7 @@ class SnakeGameAI:
         # init game state
         self.direction = Direction.RIGHT
 
-        self.head = Point(self.w / 2, self.h / 2)
+        self.head = Point(self.w // 2, self.h // 2)
         self.snake = [
             self.head,
             Point(self.head.x - BLOCK_SIZE, self.head.y),
@@ -113,6 +113,9 @@ class SnakeGameAI:
                 pygame.quit()
                 quit()
 
+        # save old distance to food for reward shaping
+        old_dist = abs(self.head.x - self.food.x) + abs(self.head.y - self.food.y)
+
         # 2. move
         self._move(action)  # update the head
         self.snake.insert(0, self.head)
@@ -132,6 +135,12 @@ class SnakeGameAI:
             self._place_food()
         else:
             self.snake.pop()
+            # reward shaping: small signal for getting closer/farther from food
+            new_dist = abs(self.head.x - self.food.x) + abs(self.head.y - self.food.y)
+            if new_dist < old_dist:
+                reward = 1
+            else:
+                reward = -1
 
         # 5. update ui and clock
         self._update_ui()
